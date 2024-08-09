@@ -134,7 +134,7 @@ function MainApp() {
                                         {filteredRooms.map((room) => (
                                             <div key={room.id} className="room" onClick={() => setSelectedRoom(room)}>
                                                 <h4>{room.name}</h4><br />
-                                                <h5>Created by: {room.createdBy}</h5>
+                                                <h5>Host: {room.createdBy}</h5>
                                                 <h6>{room.createdAt && room.createdAt.toDate().toLocaleString()}</h6>
                                             </div>
                                         ))}

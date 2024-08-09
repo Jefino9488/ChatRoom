@@ -656,17 +656,12 @@ header {
 }
 
 
-
-
 .room-section {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Adjust 200px to your preferred minimum width */
     gap: 10px;
     padding: 20px;
 }
-
-
-
 
 
 .modal-overlay {
@@ -729,12 +724,14 @@ header {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    align-items: center;
+    justify-content: center;
     padding: 20px;
 }
 
 .room {
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
     background-color: grey;
     color: white;
     display: flex;
@@ -745,8 +742,8 @@ header {
 }
 
 .crea {
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
     background-color: rgb(26, 110, 226);
     color: white;
     display: flex;
@@ -772,8 +769,6 @@ header {
 }
 
 .crea:hover{
-    width: 200px;
-    height: 200px;
     background-color:  rgb(101, 162, 247);
     color: white;
     display: flex;
@@ -786,8 +781,6 @@ header {
 }
 
 .room:hover {
-    width: 200px;
-    height: 200px;
     background-color: rgb(26, 110, 226);
     color: white;
     display: flex;
