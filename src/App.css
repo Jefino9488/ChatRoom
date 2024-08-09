@@ -156,62 +156,116 @@ input {
     margin-bottom: 60px;
 }
 
-.chat-bubble {
-    border-radius: 20px 20px 20px 0;
-    padding: 15px;
-    background-color: #3a3a3a; /* Medium grey background */
-    color: #e0e0e0; /* Light grey text */
-    width: max-content;
-    max-width: calc(100% - 50px);
-    box-shadow: -2px 2px 1px 1px #242424; /* Dark grey shadow */
+.chat-container {
     display: flex;
     align-items: flex-start;
     margin-bottom: 20px;
 }
 
-.chat-bubble.right {
-    margin-left: auto;
-    border-radius: 20px 20px 0 20px;
-    background-color: #4a4a4a; /* Slightly lighter grey background */
-    box-shadow: -2px 2px 1px 1px #333333; /* Dark grey shadow */
-}
-
-.chat-bubble__left {
+.profile-pic-left, .profile-pic-right {
     width: 35px;
     height: 35px;
     border-radius: 50%;
-    margin-right: 10px;
+}
+
+.profile-pic-left {
+    margin-right: 2%;
+}
+
+.profile-pic-right {
+    margin-left: 2%;
+}
+
+.chat-bubble {
+    border-radius: 5px 15px 15px 20px;
+    padding: 15px;
+    background-color: #3a3a3a; /* Medium grey background */
+    color: #e0e0e0; /* Light grey text */
+    width: max-content;
+    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+}
+
+.chat-bubble.right {
+    margin-left: auto;
+    border-radius: 15px 5px 15px 15px;
+    background-color: #4a4a4a;
+    align-items: flex-end;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.chat-header.right {
+    flex-direction: row-reverse;
 }
 
 .user-name {
     font-weight: bold;
-    margin-bottom: 5px;
     font-size: 0.9rem;
     color: #e0e0e0; /* Light grey text */
+}
+
+.message-timestamp {
+    font-size: 0.8rem;
+    color: #c0c0c0; /* Slightly lighter grey text */
 }
 
 .user-message {
     word-break: break-all;
     white-space: pre-wrap;
 }
-
-.message-time {
-    display: block;
-    text-align: right;
-    color: #c0c0c0; /* Slightly lighter grey text */
+.edit-button{
+    background-color: #4a4a4a;
+    color: #ffffff;
+    border: none;
+}
+.edit-button {
+    position: absolute;
+    padding: 5px;
+    /* Align the button to the left */
+    left: -30px;
+    width: 30px;
+    top: 60%;
+    display: none;
+    cursor: pointer;
+    color: #e0e0e0;
+    background-color: transparent;
 }
 
-/* Send Message */
+.chat-bubble.right:hover .edit-button {
+    display: block; /* Show the edit button on hover */
+    border-radius: 50px;
+    background-color: transparent; /* Slightly lighter grey background */
+}
+
+.received-message {
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+.chat-bubble.right .received-message {
+    margin-left: 0;
+    text-align: right; /* Align text to the right for receiver */
+/* Make room for the edit button */
+}
 .send-message {
     position: fixed;
-    bottom: 0px;
+    bottom: 0;
     width: 100%;
     padding: 10px 30px;
     background-color: #333333; /* Dark grey background */
-    align-items: start;
+    align-items: center;
     display: flex;
     justify-content: space-between;
 }
+
 
 .translation-controls {
     margin-bottom: 20px;
@@ -255,11 +309,10 @@ input {
 }
 
 .form-input__input {
-    padding: 10px 20px;
+    padding: 5px;
     font-size: 16px;
-    transform: translateX(-40px);
     border: none;
-    border-radius: 5px;
+    border-radius: 15px;
     width: 20px;
     white-space: pre-wrap;
 }
@@ -268,12 +321,11 @@ input {
     width: 60px;
     height: 40px;
     padding: 5px 5px;
-    border-radius: 0 5px 5px 0;
+    border-radius: 5px 15px 15px 5px;
     color: #dddada; /* Dark grey text */
     border: 1px solid #edebeb; /* Slightly lighter grey border */
     background-color: #4a4a4a; /* Slightly lighter grey background */
     font-weight: 600;
-    transform: translateX(-20px);
 }
 
 .send:hover {
@@ -531,14 +583,7 @@ header {
 .edit-buttons button:hover {
     background-color: #0056b3;
 }
-.edit-button{
-    width: 40%;
-    background-color: #4a4a4a;
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    margin-left: 10px;
-}
+
 
 .received-message.edited {
     font-style: italic;
@@ -770,15 +815,17 @@ header {
 }
 
 .modal {
-    background: grey;
+    background: #424242;
     padding: 20px;
-    border-radius: 5px;
+    border-radius: 25px;
     text-align: center;
 }
 
 .modal input {
     margin: 10px 0;
     padding: 10px;
+    border-radius: 25px;
+    border: none;
     width: 100%;
     box-sizing: border-box;
 
@@ -787,6 +834,8 @@ header {
 .modal button {
     margin: 5px;
     padding: 10px 20px;
+    border: none;
+    border-radius: 15px;
     background-color:  rgb(157, 190, 238);
 }
 

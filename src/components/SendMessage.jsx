@@ -32,11 +32,12 @@ const SendMessage = ({ scroll, currentRoom }) => {
 
 
     const handleInputKeyDown = (e) => {
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage(message);
         }
     };
+
 
     return (
         <div>

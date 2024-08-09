@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
-import { auth, db } from "./Firebase"; // Assuming db is your Firestore instance
-import { useAuthState } from "react-firebase-hooks/auth";
-import { doc, updateDoc, onSnapshot } from "firebase/firestore";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import {useEffect, useState} from "react";
+import {auth, db} from "./Firebase"; // Assuming db is your Firestore instance
+import {useAuthState} from "react-firebase-hooks/auth";
+import {doc, onSnapshot, updateDoc} from "firebase/firestore";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faEdit} from "@fortawesome/free-solid-svg-icons";
 
 
 const Message = ({ message}) => {
@@ -87,51 +87,60 @@ const Message = ({ message}) => {
     const formatTimestamp = (timestamp) => {
         if (!timestamp) return "";
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        const formatted = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        return formatted;
+        return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
     };
 
     // Determine which timestamp to show: editedAt if available, otherwise createdAt
     const displayTimestamp = editTimestamp ? formatTimestamp(editTimestamp) : formatTimestamp(message.createdAt);
 
     return (
-        <div className={`chat-bubble ${isCurrentUserMessage ? "right" : ""}`}>
-            <img className="chat-bubble__left" src={message.avatar} alt="user avatar" />
-            <div className="chat-bubble__right">
-                <p className="user-name">{message.name}</p>
-                {isEditing && isCurrentUserMessage && canEdit ? (
-                    <>
-            <textarea
-                type="text"
-                className="edit-textarea"
-                value={editedText}
-                onChange={(e) => setEditedText(e.target.value)}
-                onKeyDown={handleKeyDown}
-            />
-                        <div className="edit-buttons">
-                            <button className="edit-button" onClick={handleSaveClick}>Save</button>
-                            <button className="edit-button" onClick={handleCancelClick}>Cancel</button>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        {message.text && (
-                            <pre className={`received-message ${editTimestamp ? "edited" : ""}`}>{message.text}</pre>
-                        )}
-                        {editTimestamp && (
-                            <p className="edited-indicator">Edited</p>
-                        )}
-                        <p className="message-timestamp">{displayTimestamp}</p>
-                        {isCurrentUserMessage && canEdit && (
-                            <button className="edit-button" onClick={handleEditClick}>
-                                <FontAwesomeIcon icon={faEdit} />
-                            </button>
-                        )}
-                    </>
-                )}
+        <div className={`chat-container ${isCurrentUserMessage ? "right" : ""}`}>
+            {!isCurrentUserMessage && (
+                <img className="profile-pic-left" src={message.avatar} alt="user avatar" />
+            )}
+            <div className={`chat-bubble ${isCurrentUserMessage ? "right" : ""}`}>
+                <div className={`chat-header ${isCurrentUserMessage ? "right" : ""}`}>
+                    <p className="user-name">{message.name}</p>
+                    <p className="message-timestamp">{displayTimestamp}</p>
+                </div>
+                <div className="chat-bubble__right">
+                    {isEditing && isCurrentUserMessage && canEdit ? (
+                        <>
+                        <textarea
+                            type="text"
+                            className="edit-textarea"
+                            value={editedText}
+                            onChange={(e) => setEditedText(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                        />
+                            <div className="edit-buttons">
+                                <button className="edit-button" onClick={handleSaveClick}>Save</button>
+                                <button className="edit-button" onClick={handleCancelClick}>Cancel</button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {message.text && (
+                                <pre className={`received-message ${editTimestamp ? "edited" : ""}`}>{message.text}</pre>
+                            )}
+                            {editTimestamp && (
+                                <p className="edited-indicator">Edited</p>
+                            )}
+                            {isCurrentUserMessage && canEdit && (
+                                <button className="edit-button" onClick={handleEditClick}>
+                                    <FontAwesomeIcon icon={faEdit} />
+                                </button>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
+            {isCurrentUserMessage && (
+                <img className="profile-pic-right" src={message.avatar} alt="user avatar" />
+            )}
         </div>
     );
+
 };
 
 export default Message;
