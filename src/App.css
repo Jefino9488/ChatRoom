@@ -100,14 +100,43 @@ input {
     background-color:#4a4a4a;
     color: #f1f1f1;
 }
+.welcome {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    color: #fff;
+    text-align: center;
+}
+
+
+h1 {
+    font-size: 2.5rem;
+    margin: 0;
+}
+
+p {
+    font-size: 1.2rem;
+    margin: 10px 0;
+}
+
+
+footer {
+    position: absolute;
+    bottom: 20px;
+    font-size: 0.8rem;
+    color: #ddd;
+}
+
 .sign-in {
     background-color: #4285F4; /* Google's blue color */
     color: white;
     font-size: 16px;
     font-weight: bold;
-    padding: 10px 20px;
+    padding: 10px 15px;
     border: none;
-    border-radius: 5px;
+    border-radius: 25px;
     cursor: pointer;
     transition: background-color 0.3s ease;
     display: inline-block;
