@@ -29,8 +29,6 @@ const SendMessage = ({ scroll, currentRoom }) => {
         }
     };
 
-
-
     const handleInputKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -38,22 +36,26 @@ const SendMessage = ({ scroll, currentRoom }) => {
         }
     };
 
-
     return (
         <div>
-            <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(message); }} className="send-message">
-          <textarea
-              id="messageInput"
-              name="messageInput"
-              type="text"
-              className="form-input__input"
-              placeholder="Type message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleInputKeyDown}
-          />
+            <form onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage(message);
+            }} className="send-message">
+                <div className="img_user">
+                    <img src={photoURL} alt="user avatar" className="avatar"/>
+                </div>
+                <textarea
+                    id="messageInput"
+                    name="messageInput"
+                    type="text"
+                    className="form-input__input"
+                    placeholder="Type message..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                />
                 <button type="submit" className="send">Send</button>
-
             </form>
         </div>
     );

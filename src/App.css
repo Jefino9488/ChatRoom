@@ -591,8 +591,6 @@ header {
     white-space: pre-wrap; /* or any other color to indicate it's edited */
 }
 
-
-
 .edited-indicator,
 .edited-indicator-left {
     font-size: 12px;
@@ -843,5 +841,15 @@ header {
     background-color: rgb(29, 50, 234);
 }
 
+.img_user {
+    margin-right: 10px;
+}
+
+.avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+}
 
 

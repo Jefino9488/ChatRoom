@@ -107,15 +107,14 @@ const Message = ({ message}) => {
                     {isEditing && isCurrentUserMessage && canEdit ? (
                         <>
                         <textarea
-                            type="text"
                             className="edit-textarea"
                             value={editedText}
                             onChange={(e) => setEditedText(e.target.value)}
                             onKeyDown={handleKeyDown}
                         />
                             <div className="edit-buttons">
-                                <button className="edit-button" onClick={handleSaveClick}>Save</button>
-                                <button className="edit-button" onClick={handleCancelClick}>Cancel</button>
+                                <button className="edit-buttons" onClick={handleSaveClick}>Save</button>
+                                <button className="edit-buttons" onClick={handleCancelClick}>Cancel</button>
                             </div>
                         </>
                     ) : (
