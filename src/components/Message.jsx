@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "./Firebase"; // Assuming db is your Firestore instance
 import { useAuthState } from "react-firebase-hooks/auth";
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, deleteDoc } from "firebase/firestore";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
-import {encryptMessage, getEncryptionKey} from "./cryptoUtils.js";
+import { faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { encryptMessage, getEncryptionKey } from "./cryptoUtils.js";
 
 const Message = ({ message }) => {
     const [user] = useAuthState(auth);
@@ -39,17 +39,17 @@ const Message = ({ message }) => {
         });
 
         return () => unsubscribe();
-    }, [message.createdAt, message.editedAt]);
+    }, [message.createdAt, message.editedAt, message.id]);
 
     useEffect(() => {
         // Update read receipts
         if (!readByUsers.includes(user.uid)) {
             const messageRef = doc(db, "messages", message.id);
             updateDoc(messageRef, {
-                readBy: [...readByUsers, user.uid]
+                readBy: [...readByUsers, user.uid],
             });
         }
-    }, [user.uid, readByUsers]);
+    }, [user.uid, readByUsers, message.id]);
 
     const handleEditClick = () => {
         setIsEditing(true);
@@ -76,6 +76,14 @@ const Message = ({ message }) => {
         }
     };
 
+    const handleDeleteClick = async () => {
+        try {
+            const messageRef = doc(db, "messages", message.id);
+            await deleteDoc(messageRef);
+        } catch (error) {
+            console.error("Error deleting message:", error);
+        }
+    };
 
     const handleCancelClick = () => {
         // Revert changes to original message content
@@ -128,16 +136,23 @@ const Message = ({ message }) => {
                     ) : (
                         <>
                             {message.text && (
-                                <pre className={`received-message ${editTimestamp ? "edited" : ""}`}>{message.text}</pre>
+                                <pre
+                                    className={`received-message ${editTimestamp ? "edited" : ""}`}>{message.text}</pre>
                             )}
                             {editTimestamp && (
                                 <p className="edited-indicator">Edited</p>
                             )}
                             {isCurrentUserMessage && canEdit && (
-                                <button className="edit-button" onClick={handleEditClick}>
-                                    <FontAwesomeIcon icon={faEdit} />
-                                </button>
+                                <>
+                                    <button className="edit-button" onClick={handleEditClick}>
+                                        <FontAwesomeIcon icon={faEdit}/>
+                                    </button>
+
+                                </>
                             )}
+                            <button className="delete-button" onClick={handleDeleteClick}>
+                                <FontAwesomeIcon icon={faTrash}/>
+                            </button>
                         </>
                     )}
                 </div>
@@ -147,7 +162,6 @@ const Message = ({ message }) => {
             )}
         </div>
     );
-
 };
 
 export default Message;
