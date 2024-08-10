@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { query, collection, orderBy, onSnapshot, where, limit } from "firebase/firestore";
+import { getEncryptionKey, decryptMessage } from './cryptoUtils';
 import { db } from "./Firebase";
 import Message from "./Message";
 import SendMessage from "./SendMessage";
@@ -18,18 +19,26 @@ const ChatBox = ({ currentRoom, preferences }) => {
             limit(50)
         );
 
-        const unsubscribe = onSnapshot(q, (QuerySnapshot) => {
+        const unsubscribe = onSnapshot(q, async (QuerySnapshot) => {
+            const keyString = import.meta.env.VITE_ENCRYPTION_KEY;
+            const key = await getEncryptionKey(keyString);
+
             const fetchedMessages = [];
-            QuerySnapshot.forEach((doc) => {
-                fetchedMessages.push({ ...doc.data(), id: doc.id });
-            });
+            for (const doc of QuerySnapshot.docs) {
+                const data = doc.data();
+                const decryptedText = await decryptMessage(data.text, key, data.iv);
+                fetchedMessages.push({ ...data, id: doc.id, text: decryptedText });
+            }
+
             const sortedMessages = fetchedMessages.sort(
                 (a, b) => a.createdAt - b.createdAt
             );
             setMessages(sortedMessages);
         });
+
         return () => unsubscribe;
     }, [currentRoom]);
+
 
     // Function to group messages by date
     const groupMessagesByDate = (messages) => {

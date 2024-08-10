@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { auth, db } from "./Firebase";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { getEncryptionKey, encryptMessage } from './cryptoUtils';
 
 const SendMessage = ({ scroll, currentRoom }) => {
     const [message, setMessage] = useState("");
@@ -13,8 +14,14 @@ const SendMessage = ({ scroll, currentRoom }) => {
         }
 
         try {
+            const keyString = import.meta.env.VITE_ENCRYPTION_KEY;
+            const key = await getEncryptionKey(keyString);
+
+            const { cipherText, iv } = await encryptMessage(text, key);
+
             await addDoc(collection(db, "messages"), {
-                text: text,
+                text: cipherText,
+                iv: iv,
                 name: displayName,
                 avatar: photoURL,
                 createdAt: serverTimestamp(),
@@ -28,6 +35,7 @@ const SendMessage = ({ scroll, currentRoom }) => {
             console.error("Error sending message:", error);
         }
     };
+
 
     const handleInputKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {

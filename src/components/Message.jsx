@@ -1,12 +1,12 @@
-import {useEffect, useState} from "react";
-import {auth, db} from "./Firebase"; // Assuming db is your Firestore instance
-import {useAuthState} from "react-firebase-hooks/auth";
-import {doc, onSnapshot, updateDoc} from "firebase/firestore";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faEdit} from "@fortawesome/free-solid-svg-icons";
+import { useEffect, useState } from "react";
+import { auth, db } from "./Firebase"; // Assuming db is your Firestore instance
+import { useAuthState } from "react-firebase-hooks/auth";
+import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import {encryptMessage, getEncryptionKey} from "./cryptoUtils.js";
 
-
-const Message = ({ message}) => {
+const Message = ({ message }) => {
     const [user] = useAuthState(auth);
     const [isEditing, setIsEditing] = useState(false);
     const [editedText, setEditedText] = useState(message.text || "");
@@ -15,7 +15,7 @@ const Message = ({ message}) => {
     const [readByUsers, setReadByUsers] = useState([]);
 
     useEffect(() => {
-        // Calculate if message can still be edited
+        // Calculate if the message can still be edited
         if (message.createdAt) {
             const editTimeLimit = 5 * 60 * 1000; // 5 minutes in milliseconds
             const messageTime = message.createdAt.toMillis();
@@ -24,7 +24,7 @@ const Message = ({ message}) => {
             setCanEdit(elapsedTime <= editTimeLimit);
         }
 
-        // Set edit timestamp if message has been edited
+        // Set edit timestamp if the message has been edited
         if (message.editedAt) {
             setEditTimestamp(message.editedAt.toDate()); // Assuming editedAt is a Firestore Timestamp
         } else {
@@ -57,17 +57,25 @@ const Message = ({ message}) => {
 
     const handleSaveClick = async () => {
         try {
+            const keyString = import.meta.env.VITE_ENCRYPTION_KEY;
+            const key = await getEncryptionKey(keyString);
+
+            const { cipherText, iv } = await encryptMessage(editedText, key);
+
             const messageRef = doc(db, "messages", message.id);
             const now = new Date();
             await updateDoc(messageRef, {
-                text: editedText,
+                text: cipherText,
+                iv: iv,
                 editedAt: now, // Update editedAt timestamp
             });
+
             setIsEditing(false);
         } catch (error) {
             console.error("Error updating message:", error);
         }
     };
+
 
     const handleCancelClick = () => {
         // Revert changes to original message content
@@ -87,7 +95,7 @@ const Message = ({ message}) => {
     const formatTimestamp = (timestamp) => {
         if (!timestamp) return "";
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     // Determine which timestamp to show: editedAt if available, otherwise createdAt
@@ -106,12 +114,12 @@ const Message = ({ message}) => {
                 <div className="chat-bubble__right">
                     {isEditing && isCurrentUserMessage && canEdit ? (
                         <>
-                        <textarea
-                            className="edit-textarea"
-                            value={editedText}
-                            onChange={(e) => setEditedText(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                        />
+                            <textarea
+                                className="edit-textarea"
+                                value={editedText}
+                                onChange={(e) => setEditedText(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                            />
                             <div className="edit-buttons">
                                 <button className="edit-buttons" onClick={handleSaveClick}>Save</button>
                                 <button className="edit-buttons" onClick={handleCancelClick}>Cancel</button>
