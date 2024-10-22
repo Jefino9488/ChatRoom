@@ -108,7 +108,6 @@ function MainApp() {
         if (window.confirm("Are you sure you want to delete this room?")) {
             try {
                 await deleteDoc(doc(db, "rooms", roomId));
-                alert("Room deleted successfully");
             } catch (error) {
                 console.error("Error deleting room: ", error);
             }

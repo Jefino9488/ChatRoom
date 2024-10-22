@@ -56,12 +56,17 @@ const SendMessage = ({ scroll, currentRoom }) => {
                 <textarea
                     id="messageInput"
                     name="messageInput"
-                    type="text"
                     className="form-input__input"
-                    placeholder="Type message..."
+                    placeholder="Type your message..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={handleInputKeyDown}
+                    rows="1" // Start with a single row
+                    style={{resize: 'none', overflow: 'hidden'}} // Disable resizing
+                    onInput={(e) => {
+                        e.target.style.height = 'auto'; // Reset the height
+                        e.target.style.height = `${e.target.scrollHeight}px`; // Set height to scrollHeight
+                    }}
                 />
                 <button type="submit" className="send">Send</button>
             </form>

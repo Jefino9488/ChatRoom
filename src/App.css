@@ -62,6 +62,7 @@ input {
 .search-input {
     padding: 10px 20px;
     border-radius: 15px;
+    outline: none;
     border: none;
     background-color: #4a4a4a; /* Slightly lighter grey background */
     color: #f1f1f1; /* Light grey text */
@@ -369,12 +370,21 @@ footer {
 }
 
 .form-input__input {
-    padding: 5px;
+    flex: 1; /* Allow the textarea to grow */
+    min-height: 40px; /* Minimum height for the textarea */
+    padding: 10px; /* Padding for better text input */
+    border: 1px solid #ccc;
+    border-radius: 14px;
     font-size: 16px;
-    border: none;
-    border-radius: 15px;
-    width: 20px;
-    white-space: pre-wrap;
+    color: #f1f1f1;
+    background-color: #4a4a4a;
+    margin-right: 10px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-input__input:focus {
+    border: 2px solid #007bff;
 }
 
 .send{
@@ -959,5 +969,5 @@ header {
     width: 2px;
     height: 50px;
     background-color: #ccc;
-    margin: 0 15px;
+    margin: 3px;
 }
