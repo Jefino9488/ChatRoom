@@ -1,4 +1,4 @@
-import{ useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from "react-router-dom";
 import "./App.css";
 import NavBar from "./components/NavBar";
@@ -6,7 +6,10 @@ import Welcome from "./components/Welcome";
 import ChatBox from "./components/ChatBox";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "./components/Firebase";
-import { collection, query, orderBy, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, addDoc, serverTimestamp, onSnapshot, deleteDoc, doc } from "firebase/firestore";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
+
 
 function App() {
     return (
@@ -28,6 +31,8 @@ function MainApp() {
     const [roomName, setRoomName] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [filteredRooms, setFilteredRooms] = useState([]);
+    const [dropdownVisible, setDropdownVisible] = useState(null); // To manage the dropdown for each room
+    const dropdownRef = useRef(null); // Reference to the dropdown container
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -99,9 +104,38 @@ function MainApp() {
         setCreateRoomVisible(true);
     };
 
+    const deleteRoom = async (roomId) => {
+        if (window.confirm("Are you sure you want to delete this room?")) {
+            try {
+                await deleteDoc(doc(db, "rooms", roomId));
+                alert("Room deleted successfully");
+            } catch (error) {
+                console.error("Error deleting room: ", error);
+            }
+        }
+    };
+
     const signOut = () => {
         auth.signOut();
     };
+
+    const toggleDropdown = (roomId) => {
+        setDropdownVisible(dropdownVisible === roomId ? null : roomId);
+    };
+
+    // Close dropdown when clicked outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setDropdownVisible(null);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [dropdownRef]);
 
     return (
         <div className="App">
@@ -116,30 +150,66 @@ function MainApp() {
                 <Route path="/rooms" element={
                     user ? (
                         <>
-                                <>
-                                    <div className="search-bar">
-                                        <input
-                                            className="search-input"
-                                            type="text"
-                                            placeholder="Search rooms"
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="room-container">
-                                        <button className="crea" onClick={handleCreateRoomClick}>
-                                            <span>+</span>
-                                            <p>Create Room</p>
-                                        </button>
-                                        {filteredRooms.map((room) => (
-                                            <div key={room.id} className="room" onClick={() => setSelectedRoom(room)}>
-                                                <h4>{room.name}</h4><br />
-                                                <h5>Host: {room.createdBy}</h5>
-                                                <h6>{room.createdAt && room.createdAt.toDate().toLocaleString()}</h6>
+                            <div className="search-bar">
+                                <input
+                                    className="search-input"
+                                    type="text"
+                                    placeholder="Search rooms"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <div className="room-container">
+                                <button className="crea" onClick={handleCreateRoomClick}>
+                                    <FontAwesomeIcon icon={faPlus} size="3x"/>
+                                </button>
+                                <div className="vertical-separator"></div>
+                                {filteredRooms.map((room) => (
+                                    <div
+                                        key={room.id}
+                                        className="room"
+                                        onClick={() => setSelectedRoom(room)}
+                                    >
+                                        <h4>{room.name}</h4>
+                                        <h5>Host: {room.createdBy}</h5>
+                                        {/*<h6>{room.createdAt && room.createdAt.toDate().toLocaleString()}</h6>*/}
+                                        {user && (user.displayName === room.createdBy || user.email === room.createdBy) && (
+                                            <div className="menu-container">
+                                                <button
+                                                    className="menu-button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleDropdown(room.id);
+                                                    }}
+                                                >
+                                                    &#x22EE; {/* Vertical Ellipsis */}
+                                                </button>
+                                                {dropdownVisible === room.id && (
+                                                    <div className="dropdown" ref={dropdownRef}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                deleteRoom(room.id);
+                                                            }}
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                        {/*/!* Add other options here *!/*/}
+                                                        {/*<button*/}
+                                                        {/*    onClick={(e) => {*/}
+                                                        {/*        e.stopPropagation();*/}
+                                                        {/*        // Implement other actions*/}
+                                                        {/*    }}*/}
+                                                        {/*>*/}
+                                                        {/*    Other Option*/}
+                                                        {/*</button>*/}
+                                                    </div>
+                                                )}
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
-                                </>
+                                ))}
+                            </div>
                             {selectedRoom && (
                                 <div className="modal-overlay">
                                     <div className="modal">
@@ -161,13 +231,13 @@ function MainApp() {
                                         <h2>Create Room</h2>
                                         <input
                                             type="text"
-                                            placeholder="Enter room name"
+                                            placeholder="Room name"
                                             value={roomName}
                                             onChange={(e) => setRoomName(e.target.value)}
                                         />
                                         <input
                                             type="password"
-                                            placeholder="Enter pass key"
+                                            placeholder="Create pass key"
                                             value={passKey}
                                             onChange={(e) => setPassKey(e.target.value)}
                                         />
