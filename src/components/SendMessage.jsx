@@ -16,6 +16,7 @@ const SendMessage = ({ scroll, currentRoom }) => {
         try {
             const keyString = import.meta.env.VITE_ENCRYPTION_KEY;
             const key = await getEncryptionKey(keyString);
+            console.log(keyString)
 
             const { cipherText, iv } = await encryptMessage(text, key);
 
