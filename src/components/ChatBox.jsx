@@ -4,14 +4,22 @@ import { getEncryptionKey, decryptMessage } from './cryptoUtils';
 import { db } from "./Firebase";
 import Message from "./Message";
 import SendMessage from "./SendMessage";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ChatBox = ({ currentRoom, preferences }) => {
     const [messages, setMessages] = useState([]);
+    const [loading, setLoading] = useState(true);
     const scroll = useRef();
 
     useEffect(() => {
-        if (!currentRoom) return;
+        if (!currentRoom) {
+            setLoading(false);
+            return;
+        }
 
+        setLoading(true);
         const q = query(
             collection(db, "messages"),
             where("roomId", "==", currentRoom.id),
@@ -34,17 +42,16 @@ const ChatBox = ({ currentRoom, preferences }) => {
                 (a, b) => a.createdAt - b.createdAt
             );
             setMessages(sortedMessages);
+            setLoading(false);
         });
 
         return () => unsubscribe;
     }, [currentRoom]);
 
-
-    // Function to group messages by date
     const groupMessagesByDate = (messages) => {
         return messages.reduce((groups, message) => {
             if (message.createdAt) {
-                const date = message.createdAt.toDate().toDateString(); // Convert timestamp to date string
+                const date = message.createdAt.toDate().toDateString();
                 if (!groups[date]) {
                     groups[date] = [];
                 }
@@ -63,25 +70,51 @@ const ChatBox = ({ currentRoom, preferences }) => {
     const groupedMessages = groupMessagesByDate(messages);
 
     if (!currentRoom) {
-        return <div className="chat-box">Please join a room to start chatting.</div>;
+        return (
+            <div className="flex-1 flex items-center justify-center p-8 bg-muted/50 rounded-lg m-4">
+                <p className="text-lg text-muted-foreground">Please join a room to start chatting.</p>
+            </div>
+        );
     }
 
     return (
-        <main className="chat-box">
-            <div className="messages-wrapper">
-                {Object.keys(groupedMessages).map((date) => (
-                    <div key={date}>
-                        <div className="date-header">{date}</div>
-                        {groupedMessages[date].map((message) => (
-                            <Message key={message.id} message={message} preferences={preferences}/>
-                        ))}
+        <Card className="flex-1 flex flex-col h-full border-0 rounded-none shadow-none bg-background">
+            <CardContent className="flex-1 p-0">
+                <ScrollArea className="h-[calc(100vh-10rem)] pb-4">
+                    <div className="max-w-3xl mx-auto px-4">
+                        {loading ? (
+                            <div className="space-y-4 mt-4">
+                                {[...Array(5)].map((_, i) => (
+                                    <Skeleton key={i} className="h-16 w-full" />
+                                ))}
+                            </div>
+                        ) : (
+                            Object.keys(groupedMessages).map((date) => (
+                                <div key={date} className="space-y-4">
+                                    <div className="sticky top-0 z-10 flex items-center justify-center my-4">
+                                        <div className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full font-medium">
+                                            {date}
+                                        </div>
+                                    </div>
+                                    {groupedMessages[date].map((message, idx) => (
+                                        <Message
+                                            key={message.id}
+                                            message={message}
+                                            previousMessage={idx > 0 ? groupedMessages[date][idx - 1] : null}
+                                            preferences={preferences}
+                                        />
+                                    ))}
+                                </div>
+                            ))
+                        )}
+                        <div ref={scroll} />
                     </div>
-                ))}
-            </div>
-            <span ref={scroll}></span>
+                </ScrollArea>
+            </CardContent>
             <SendMessage scroll={scroll} currentRoom={currentRoom} preferences={preferences} />
-        </main>
+        </Card>
     );
 };
 
 export default ChatBox;
+
