@@ -4,12 +4,14 @@ import { useAuthState } from "react-firebase-hooks/auth"
 import { auth, db } from "./components/Firebase"
 import { collection, query, orderBy, addDoc, serverTimestamp, onSnapshot, deleteDoc, doc } from "firebase/firestore"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Plus, MoreVertical, Search, MessageSquare, Lock, Users } from 'lucide-react'
+import { Plus, MoreVertical, Search, Lock, Users, Hash } from 'lucide-react'
 import NavBar from "./components/NavBar"
 import Welcome from "./components/Welcome"
 import ChatBox from "./components/ChatBox"
@@ -35,6 +37,7 @@ function MainApp() {
     const [searchTerm, setSearchTerm] = useState("")
     const [filteredRooms, setFilteredRooms] = useState([])
     const navigate = useNavigate()
+    const [requiresPassword, setRequiresPassword] = useState(false);
 
     useEffect(() => {
         const q = query(collection(db, "rooms"), orderBy("createdAt", "desc"))
@@ -73,26 +76,41 @@ function MainApp() {
     }, [user, currentRoom, navigate])
 
     const createRoom = async () => {
-        if (!user) return
+        if (!user) return;
 
         try {
-            const newRoomRef = await addDoc(collection(db, "rooms"), {
+            const newRoomData = {
                 name: roomName,
                 createdBy: user.displayName || user.email,
                 createdAt: serverTimestamp(),
-                passKey: passKey,
-            })
-            setRoomName("")
-            setPassKey("")
-            setCreateRoomVisible(false)
-            setCurrentRoom({ id: newRoomRef.id, name: roomName, createdBy: user.displayName || user.email, createdAt: new Date(), passKey: passKey })
+            };
+
+            if (requiresPassword) {
+                newRoomData.passKey = passKey;
+            }
+
+            const newRoomRef = await addDoc(collection(db, "rooms"), newRoomData);
+
+            setRoomName("");
+            setPassKey("");
+            setRequiresPassword(false);
+            setCreateRoomVisible(false);
+
+            setCurrentRoom({
+                id: newRoomRef.id,
+                name: roomName,
+                createdBy: user.displayName || user.email,
+                createdAt: new Date(),
+                passKey: requiresPassword ? passKey : null,
+            });
         } catch (error) {
-            console.error("Error creating room: ", error)
+            console.error("Error creating room: ", error);
         }
-    }
+    };
 
     const handlePassKeySubmit = () => {
         if (passKey === selectedRoom.passKey) {
+            localStorage.setItem(`room_${selectedRoom.id}_passKey`, passKey);
             setCurrentRoom(selectedRoom)
             setSelectedRoom(null)
             setPassKey("")
@@ -100,6 +118,15 @@ function MainApp() {
             alert("Invalid pass key. Please try again.")
         }
     }
+
+    const handleRoomClick = (room) => {
+        const savedPassKey = localStorage.getItem(`room_${room.id}_passKey`);
+        if (savedPassKey && savedPassKey === room.passKey) {
+            setCurrentRoom(room);
+        } else {
+            setSelectedRoom(room);
+        }
+    };
 
     const deleteRoom = async (roomId) => {
         if (window.confirm("Are you sure you want to delete this room?")) {
@@ -112,6 +139,7 @@ function MainApp() {
     }
 
     const signOut = () => {
+        localStorage.clear();
         auth.signOut()
     }
 
@@ -138,13 +166,13 @@ function MainApp() {
                 {filteredRooms.map((room) => (
                     <div
                         key={room.id}
-                        onClick={() => setSelectedRoom(room)}
+                        onClick={() => handleRoomClick(room)}
                         className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-accent/50 transition-colors
                             ${currentRoom?.id === room.id ? 'bg-accent text-accent-foreground' : ''}`}
                     >
                         <Avatar className="h-12 w-12">
-                            <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                                {room.name.substring(0, 2).toUpperCase()}
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                <Hash className="h-6 w-6" />
                             </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -193,10 +221,6 @@ function MainApp() {
                         user ? (
                             <div className="flex-1 flex items-center justify-center bg-muted/10">
                                 <div className="text-center space-y-4 p-8 bg-card rounded-lg shadow-lg">
-                                    <MessageSquare className="h-16 w-16 mx-auto text-primary" />
-                                    <h3 className="text-2xl font-bold text-primary">Select a Chat</h3>
-                                    <p className="text-muted-foreground max-w-sm">Choose a room from the list or create a new one to start collaborating with your team.</p>
-                                    <Button onClick={() => setCreateRoomVisible(true)}>Create New Room</Button>
                                 </div>
                             </div>
                         ) : <Navigate to="/welcome" />
@@ -216,13 +240,16 @@ function MainApp() {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        <Input
-                            type="password"
-                            value={passKey}
-                            onChange={(e) => setPassKey(e.target.value)}
-                            placeholder="Enter pass key"
-                            className="col-span-3"
-                        />
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Lock className="h-4 w-4 justify-self-end" />
+                            <Input
+                                type="password"
+                                value={passKey}
+                                onChange={(e) => setPassKey(e.target.value)}
+                                placeholder="Enter pass key"
+                                className="col-span-3"
+                            />
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setSelectedRoom(null)}>Cancel</Button>
@@ -236,14 +263,14 @@ function MainApp() {
                     <DialogHeader>
                         <DialogTitle>Create New Room</DialogTitle>
                         <DialogDescription>
-                            Create a new room and set a pass key for secure access.
+                            Create a new room. You can make it open or password-protected.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <label htmlFor="room-name" className="text-right">
+                            <Label htmlFor="room-name" className="text-right">
                                 Room Name
-                            </label>
+                            </Label>
                             <Input
                                 id="room-name"
                                 value={roomName}
@@ -251,21 +278,33 @@ function MainApp() {
                                 className="col-span-3"
                             />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <label htmlFor="pass-key" className="text-right">
-                                Pass Key
-                            </label>
-                            <Input
-                                id="pass-key"
-                                type="password"
-                                value={passKey}
-                                onChange={(e) => setPassKey(e.target.value)}
-                                className="col-span-3"
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="requires-password"
+                                checked={requiresPassword}
+                                onCheckedChange={(checked) => setRequiresPassword(checked)}
                             />
+                            <Label htmlFor="requires-password">Requires Password</Label>
                         </div>
+                        {requiresPassword && (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="pass-key" className="text-right">
+                                    Pass Key
+                                </Label>
+                                <Input
+                                    id="pass-key"
+                                    type="password"
+                                    value={passKey}
+                                    onChange={(e) => setPassKey(e.target.value)}
+                                    className="col-span-3"
+                                />
+                            </div>
+                        )}
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setCreateRoomVisible(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setCreateRoomVisible(false)}>
+                            Cancel
+                        </Button>
                         <Button onClick={createRoom}>Create Room</Button>
                     </DialogFooter>
                 </DialogContent>
@@ -275,4 +314,3 @@ function MainApp() {
 }
 
 export default App
-
